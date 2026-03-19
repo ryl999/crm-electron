@@ -1,21 +1,23 @@
 {
-  "name": "SalesCRM",
+  "name": "crm-electron",
   "version": "1.0.0",
+  "description": "CRM 客户管理系统",
+  "author": "任云龙 <renyunlong@example.com>",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "dist": "electron-builder"
   },
   "devDependencies": {
-    "electron": "^25.3.1",
+    "electron": "^25.9.8",
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
     "xlsx": "^0.18.5"
   },
   "build": {
-    "appId": "com.yourname.salescrm",
-    "productName": "SalesCRM",
+    "appId": "com.ryl999.crm",
+    "productName": "CRM客户管理",
     "files": [
       "**/*"
     ],
@@ -23,36 +25,19 @@
       "buildResources": "assets"
     },
     "mac": {
-      "target": [
-        "dmg"
-      ],
+      "target": ["dmg"],
       "icon": "assets/icon.icns"
     },
     "dmg": {
       "icon": "assets/icon.icns",
       "contents": [
-        {
-          "x": 130,
-          "y": 220,
-          "type": "file"
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
+        { "x": 130, "y": 220, "type": "file" },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
       ]
     },
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
+        { "target": "nsis", "arch": ["x64", "ia32"] }
       ],
       "icon": "assets/icon.ico"
     },

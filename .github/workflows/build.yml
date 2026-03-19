@@ -6,78 +6,40 @@ env:
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
-
+        platform: [mac, windows]
     steps:
-      # 1️⃣ 检出仓库
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # 2️⃣ 安装 Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
         with:
-          node-version: "20"  # 仍使用 Node.js 20 运行你的依赖，Node 24 默认
+          node-version: "24"
 
-      # 3️⃣ 缓存 node_modules
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      # 4️⃣ 安装依赖
       - name: Install dependencies
         run: npm ci
 
-      # 5️⃣ 构建应用
-      - name: Build app
-        run: npx electron-builder --${{ matrix.os == 'macos-latest' && 'mac' || 'win'}} --publish=never
-        shell: bash
+      - name: Build App
+        run: |
+          if [ "${{ matrix.platform }}" == "mac" ]; then
+            npx electron-builder --mac --publish=never
+          else
+            npx electron-builder --win --publish=never
+          fi
 
-      # 6️⃣ 上传构建产物
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-build
+          name: ${{ matrix.platform }}-build
           path: |
-            dist/*
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download macOS build artifact
-        if: needs.build.outputs.os == 'macos-latest'
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-latest-build
-          path: dist/mac
-
-      - name: Download Windows build artifact
-        if: needs.build.outputs.os == 'windows-latest'
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-latest-build
-          path: dist/windows
-
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v3
-        with:
-          tag: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
-          files: |
-            dist/mac/*.dmg
-            dist/windows/*.exe
+            dist/mac-*/**/*.dmg
+            dist/win-*/**/*.exe
