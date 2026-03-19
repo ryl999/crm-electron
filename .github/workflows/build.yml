@@ -35,7 +35,7 @@ jobs:
           path: dist/**/*.{dmg,app}
 
       - name: Create GitHub Release (mac)
-        uses: ncipollo/release-action@v2
+        uses: ncipollo/release-action@v1
         with:
           artifacts: dist/**/*.{dmg,app}
           tag: ${{ github.ref_name }}
