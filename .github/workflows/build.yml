@@ -6,40 +6,55 @@ env:
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build:
+  build-mac:
+    name: Build macOS
     runs-on: macos-latest
-    strategy:
-      matrix:
-        platform: [mac, windows]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: 20
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build App
-        run: |
-          if [ "${{ matrix.platform }}" == "mac" ]; then
-            npx electron-builder --mac --publish=never
-          else
-            npx electron-builder --win --publish=never
-          fi
+      - name: Build macOS app
+        run: npx electron-builder --mac --publish=never
 
-      - name: Upload artifacts
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-build
-          path: |
-            dist/mac-*/**/*.dmg
-            dist/win-*/**/*.exe
+          name: mac-artifacts
+          path: dist/*.dmg
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    needs: build-mac
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows app
+        run: npx electron-builder --win --x64 --publish=never
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: dist/*.exe
