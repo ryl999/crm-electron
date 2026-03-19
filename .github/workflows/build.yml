@@ -1,58 +1,73 @@
-name: Build CRM App
+name: Build CRM Electron App
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-
-  # ================= Windows 打包 =================
-  build-win:
-    runs-on: windows-latest
-
-    steps:
-      - name: 拉取代码
-        uses: actions/checkout@v3
-
-      - name: 安装 Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: 安装依赖
-        run: npm install
-
-      - name: 打包 Windows
-        run: npx electron-builder --win
-
-      - name: 上传 Windows 安装包
-        uses: actions/upload-artifact@v3
-        with:
-          name: Windows-安装包
-          path: dist/*.exe
-
-
-  # ================= Mac 打包 =================
-  build-mac:
-    runs-on: macos-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
 
     steps:
-      - name: 拉取代码
+      # 1️⃣ 拉取代码
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 安装 Node
+      # 2️⃣ 安装 Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
-      - name: 安装依赖
+      # 3️⃣ 安装依赖
+      - name: Install dependencies
         run: npm install
 
-      - name: 打包 Mac
-        run: npx electron-builder --mac
+      # 4️⃣ 获取 package.json 版本号
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_ENV
 
-      - name: 上传 Mac 安装包
+      # 5️⃣ 打包应用
+      - name: Build Electron app
+        run: npm run dist
+
+      # 6️⃣ 上传安装包到 Artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: Mac-安装包
-          path: dist/*.dmg
+          name: release-files
+          path: |
+            dist/*.dmg
+            dist/mac-*/**/*.dmg
+            dist/*.exe
+            dist/win-*/**/*.exe
+
+      # 7️⃣ 创建 GitHub Release（使用 package.json 的版本号）
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.version }}
+          name: v${{ env.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 8️⃣ 上传安装包到 Release
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.dmg
+            dist/mac-*/**/*.dmg
+            dist/*.exe
+            dist/win-*/**/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
