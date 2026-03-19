@@ -1,60 +1,42 @@
 name: Build CRM App
 
-# 强制 Node.js 24
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  VERSION: 1.0.0
 
 jobs:
   build-mac:
     name: Build macOS
     runs-on: macos-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build macOS app
-        run: npx electron-builder --mac --publish=never
-
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
+          node-version: 24
+      - run: npm ci
+      - run: npx electron-builder --mac --arm64 --publish=never
+      - uses: actions/upload-artifact@v4
         with:
           name: mac-artifacts
           path: dist/*.dmg
 
-  build-windows:
+  build-win:
     name: Build Windows
     runs-on: windows-latest
-    needs: build-mac
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Windows app
-        run: npx electron-builder --win --x64 --publish=never
-
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+          node-version: 24
+      - run: npm ci
+      - run: npx electron-builder --win --x64 --publish=never
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
           path: dist/*.exe
