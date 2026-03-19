@@ -65,7 +65,7 @@ jobs:
           path: dist/**/*.{exe,zip}
 
       - name: Create GitHub Release (windows)
-        uses: ncipollo/release-action@v2
+        uses: ncipollo/release-action@v1
         with:
           artifacts: dist/**/*.{exe,zip}
           tag: ${{ github.ref_name }}
