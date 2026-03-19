@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+<meta charset="UTF-8">
+<title>CRM客户管理</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<!-- ================= 顶部操作栏 ================= -->
+<div class="top-bar">
+
+<div class="left-buttons">
+
+<button onclick="openCustomerModal()">新增客户</button>
+
+<input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
+<button onclick="document.getElementById('excelInput').click()">批量导入</button>
+
+<button onclick="exportExcel()">导出Excel</button>
+
+<button onclick="openStatusModal()">编辑跟进状态</button>
+
+<button onclick="openReminderModal()">跟进提醒</button>
+
+<div style="position: relative; display: inline-block;">
+  <button id="todoBtn" onclick="openTodoModal()">待办事项</button>
+  <span id="todoBadge" style="
+    display: none;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: bold;
+    pointer-events: none;
+  ">0</span>
+</div>
+
+</div>
+
+<div class="search-box">
+
+<input
+type="text"
+id="searchInput"
+placeholder="搜索 公司 / 电话 / 地区 / 拼音"
+oninput="searchCustomers()"
+>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= 状态颜色提示栏 ================= -->
+<div class="status-bar">
+<div id="statusList"></div>
+</div>
+
+
+
+<!-- ================= 客户表格 ================= -->
+<div class="table-container">
+
+<table class="customer-table">
+
+<thead>
+<tr>
+<th>公司名称</th>
+<th>客户名称</th>
+<th>联系方式</th>
+<th>来源</th>
+<th>产品信息</th>
+<th>地区</th>
+<th>地址</th>
+<th>最新跟进日期</th>
+<th>操作</th>
+</tr>
+</thead>
+
+<tbody id="customerBody">
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<!-- ================= 新增 / 编辑客户弹窗 ================= -->
+<div id="customerModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeCustomerModal()">&times;</span>
+
+<h3 id="modalTitle">新增客户</h3>
+
+<div class="form-row">
+<label>公司名称</label>
+<input id="c_company">
+</div>
+
+<div class="form-row">
+<label>联系人</label>
+<input id="c_contact">
+</div>
+
+<div class="form-row">
+<label>电话</label>
+<input id="c_phone">
+</div>
+
+<div class="form-row">
+<label>来源</label>
+<input id="c_source">
+</div>
+
+<div class="form-row">
+<label>产品信息</label>
+<input id="c_product">
+</div>
+
+<div class="form-row">
+<label>地区</label>
+<input id="c_region">
+</div>
+
+<div class="form-row">
+<label>地址</label>
+<input id="c_address">
+</div>
+
+<div class="form-row">
+<label>当前状态</label>
+<select id="c_status"></select>
+</div>
+
+<br>
+
+<button onclick="saveCustomer()">保存</button>
+
+</div>
+</div>
+
+
+
+<!-- ================= 联系记录弹窗 ================= -->
+<div id="recordModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeRecordModal()">&times;</span>
+
+<h3>联系记录 - <span id="recordCustomerName"></span></h3>
+
+<div id="recordList"></div>
+
+<input id="newRecordContent" placeholder="输入联系内容">
+
+<select id="recordStatusSelect"></select>
+
+<button onclick="addRecord()">添加记录</button>
+
+</div>
+</div>
+
+
+
+<!-- ================= 编辑跟进状态 ================= -->
+<div id="statusModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeStatusModal()">&times;</span>
+
+<h3>编辑跟进状态</h3>
+
+<div id="statusEditList"></div>
+
+<br>
+
+<input id="newStatusName" placeholder="状态名称">
+
+<input type="color" id="newStatusColor" value="#ff0000">
+
+<button onclick="addStatus()">新增状态</button>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= 跟进提醒设置 ================= -->
+<div id="reminderModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeReminderModal()">&times;</span>
+
+<h3>跟进提醒设置</h3>
+
+<div id="reminderList"></div>
+
+<br>
+
+<button onclick="saveReminder()">保存设置</button>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= 今日待办弹窗 ================= -->
+<div id="todoModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeTodoModal()">&times;</span>
+
+<h3>今日待办事项</h3>
+
+<div id="todoList"></div>
+
+</div>
+
+</div>
+
+<!-- Electron xlsx --> 
+ <script src="node_modules/xlsx/dist/xlsx.full.min.js"></script> 
+ 
+<!-- 拼音搜索 --> 
+<script src="pinyin-pro.js"></script> 
+<!-- 主程序 --> 
+<script src="app.js"></script>
+
+</body>
+</html>

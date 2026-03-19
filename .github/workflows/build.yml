@@ -1,0 +1,58 @@
+name: Build CRM App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  # ================= Windows 打包 =================
+  build-win:
+    runs-on: windows-latest
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v3
+
+      - name: 安装 Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 打包 Windows
+        run: npx electron-builder --win
+
+      - name: 上传 Windows 安装包
+        uses: actions/upload-artifact@v3
+        with:
+          name: Windows-安装包
+          path: dist/*.exe
+
+
+  # ================= Mac 打包 =================
+  build-mac:
+    runs-on: macos-latest
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v3
+
+      - name: 安装 Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 打包 Mac
+        run: npx electron-builder --mac
+
+      - name: 上传 Mac 安装包
+        uses: actions/upload-artifact@v3
+        with:
+          name: Mac-安装包
+          path: dist/*.dmg
