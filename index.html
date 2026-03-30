@@ -76,8 +76,7 @@ oninput="searchCustomers()"
 <thead>
 <tr>
 <th>公司名称</th>
-<th>客户名称</th>
-<th>联系方式</th>
+<th>联系人</th>
 <th>来源</th>
 <th>产品信息</th>
 <th>地区</th>
@@ -105,19 +104,25 @@ oninput="searchCustomers()"
 
 <h3 id="modalTitle">新增客户</h3>
 
+<!-- 公司名 -->
+<!-- 公司名 -->
 <div class="form-row">
-<label>公司名称</label>
-<input id="c_company">
+  <label>公司名称</label>
+  <div class="input-with-btn">
+    <div class="company-wrapper">
+      <div id="companyContainer"></div>
+    </div>
+  </div>
 </div>
 
+<!-- 联系人 -->
 <div class="form-row">
-<label>联系人</label>
-<input id="c_contact">
-</div>
-
-<div class="form-row">
-<label>电话</label>
-<input id="c_phone">
+  <label>联系人</label>
+  <div class="input-with-btn">
+    <div class="contact-wrapper">
+      <div id="contactContainer"></div> <!-- ⭐只留这个 -->
+    </div>
+  </div>
 </div>
 
 <div class="form-row">

@@ -8,24 +8,27 @@ let editingIndex = null; // 当前编辑客户索引
 
 // ================= 页面加载 =================
 window.onload = async () => {
-  const data = await window.electronAPI.loadData(); // 读取本地数据
+  const data = await window.electronAPI.loadData();
+
   statusList = data.statusList.length ? data.statusList : [
     { name: "未跟进", color: "#e74c3c" },
     { name: "跟进中", color: "#f1c40f" },
     { name: "已完成", color: "#2ecc71" }
-  ]; // 默认状态
+  ];
+
   customers = data.customers || [];
   reminderRules = data.reminderRules || {};
-    // 新增：读取待办
   todoList = data.todoList || [];
 
- 
   rebuildTodos();
-  checkReminderTodos(); // 每次打开软件检查提醒
-  renderStatusBar();     // 渲染状态提示栏
-  renderTable();         // 渲染客户表格
-};
+  checkReminderTodos();
+  renderStatusBar();
+  renderTable();
 
+  // ⭐ 加在这里
+  refreshCompanyButtons();
+  refreshContactButtons();
+};
 // ================= 数据保存 =================
 function saveAllData() {
   window.electronAPI.saveData({ customers, statusList, reminderRules ,todoList}); // 保存到本地
@@ -45,57 +48,138 @@ function renderStatusBar() {
 
 // ================= 自动列宽+自适应窗口 =================
 function syncColumnWidthsFull() {
+
+  // 获取外层容器（决定表格最大可用宽度）
   const container = document.querySelector(".table-container");
+
+  // 获取表格
   const table = document.querySelector(".customer-table");
+
+  // 如果没有找到元素，直接退出（防止报错）
   if (!table || !container) return;
 
+  // 容器当前宽度（关键：所有列宽计算的基础）
   const containerWidth = container.clientWidth;
+
+  // 获取表头和表体
   const thead = table.querySelector("thead");
   const tbody = table.querySelector("tbody");
+
+  // 如果缺少结构，退出
   if (!thead || !tbody) return;
 
+  // 所有表头单元格 th
   const ths = Array.from(thead.querySelectorAll("th"));
+
+  // 所有行 tr
   const trs = Array.from(tbody.querySelectorAll("tr"));
 
-  const addressColIndex = 6;
+  // 👉 地址列索引（第6列，从0开始）
+  const addressColIndex = 5;
+
+  // 👉 最后一列（操作列）
   const lastColIndex = ths.length - 1;
 
+  // ================= ① 计算每一列“最小需要宽度” =================
   const colWidths = ths.map((th, i) => {
+
+    // 地址列先不计算（后面单独处理）
     if (i === addressColIndex) return 0;
+
+    // 初始值 = 表头宽度
     let max = th.scrollWidth;
+
+    // 遍历每一行，取该列最大宽度
     trs.forEach(tr => {
       const td = tr.children[i];
-      if (td) max = Math.max(max, td.scrollWidth);
+      if (td) {
+        // scrollWidth = 不换行情况下真实宽度
+        max = Math.max(max, td.scrollWidth);
+      }
     });
-    if (i === lastColIndex) max = Math.max(max, 80);
+
+    // 如果是最后一列（操作列），保证最小80px
+    if (i === lastColIndex) {
+      max = Math.max(max, 80);
+    }
+
+    // 返回该列计算后的最小宽度
     return max;
   });
 
+  // ================= ② 计算地址列宽度（吃剩余空间） =================
+
+  // 所有已计算列宽总和（不含地址列）
   const usedWidth = colWidths.reduce((sum, w) => sum + w, 0);
+
+  // 地址列 = 剩余空间（至少50px）
   colWidths[addressColIndex] = Math.max(containerWidth - usedWidth, 50);
 
-  const screenMinWidth = window.innerWidth * 0.5;
+  // ================= ③ 计算缩放比例 =================
+
+  // 最小窗口宽度 = 当前窗口的80%
+  const screenMinWidth = window.innerWidth * 0.8;
+
+  // 默认缩放比例 = 当前容器 / 实际总宽
   let scale = containerWidth / (usedWidth + colWidths[addressColIndex]);
-  if (containerWidth < screenMinWidth) scale = screenMinWidth / (usedWidth + colWidths[addressColIndex]);
 
-  ths.forEach((th, i) => th.style.width = colWidths[i] * scale + "px");
-  trs.forEach(tr => Array.from(tr.children).forEach((td, i) => {
-    td.style.width = colWidths[i] * scale + "px";
-    td.style.minWidth = i === lastColIndex ? "80px" : "0";
-    td.style.overflow = i === addressColIndex ? "hidden" : "visible";
-    td.style.textOverflow = i === addressColIndex ? "ellipsis" : "clip";
-  }));
+  // 如果窗口太小 → 强制使用最小缩放比例
+  if (containerWidth < screenMinWidth) {
+    scale = screenMinWidth / (usedWidth + colWidths[addressColIndex]);
+  }
 
+  // ================= ④ 应用宽度到表头 =================
+  ths.forEach((th, i) => {
+    th.style.width = colWidths[i] * scale + "px";
+  });
+
+  // ================= ⑤ 应用宽度到每一行 =================
+  trs.forEach(tr => {
+    Array.from(tr.children).forEach((td, i) => {
+
+      // 设置每个单元格宽度
+      td.style.width = colWidths[i] * scale + "px";
+
+      // 操作列最小宽度限制
+      td.style.minWidth = i === lastColIndex ? "80px" : "0";
+
+      // 地址列隐藏溢出
+      td.style.overflow = i === addressColIndex ? "hidden" : "visible";
+
+      // 地址列显示省略号，其它列直接裁切
+      td.style.textOverflow = i === addressColIndex ? "ellipsis" : "clip";
+    });
+  });
+
+  // ================= ⑥ 字体 & 行高适配 =================
+
+  // 基础字体大小
   const baseFont = 10;
-  const baseLine = 1.5; // ⭐ 原来是1，改成1.5提升可读性
-  table.style.transform = `scale(${scale})`;
+
+  // 基础行高（提高可读性）
+  const baseLine = 1.5;
+
+  // 设置缩放原点（左上角）
   table.style.transformOrigin = "left top";
+
+  // 设置字体大小（不随 scale）
   table.style.fontSize = baseFont + "px";
-  table.style.lineHeight = (baseLine * scale) + "em"; // ⭐ 缩放行高
+
+  // 行高随 scale 缩放（避免挤在一起）
+  table.style.lineHeight = (baseLine * scale) + "em";
 }
 
 // ================= 渲染表格 =================
 function renderTable() {
+  customers.forEach(c => {
+  if (!Array.isArray(c.company)) c.company = [c.company || ""];
+  if (!Array.isArray(c.contacts)) {
+    c.contacts = [{
+      name: c.contact || "",
+      phone: c.phone || ""
+    }];
+  }
+});
   const tbody = document.getElementById("customerBody"); // 获取表体元素
   tbody.innerHTML = ""; // 清空表体内容
 
@@ -113,13 +197,20 @@ function renderTable() {
 
     // 4️⃣ 填充行内容，操作列显示状态颜色
     tr.innerHTML = `
-      <td>${c.company}</td>               <!-- 公司名称 -->
-      <td>${c.contact}</td>               <!-- 客户名称 -->
-      <td>${c.phone}</td>                 <!-- 联系方式 -->
+      <td>
+        <select class="table-select">
+          ${(c.company || []).map(name => `<option>${name}</option>`).join("")}
+        </select>
+      </td>
+      <td>
+        <select class="table-select">
+          ${(c.contacts || []).map(p => `<option>${p.name}${p.phone ? "-" + p.phone : ""}</option>`).join("")}
+        </select>
+      </td>
       <td>${c.source || ""}</td>          <!-- 来源 -->
-      <td>${c.product}</td>               <!-- 产品信息 -->
-      <td>${c.region}</td>                <!-- 地区 -->
-      <td>${c.address}</td>               <!-- 地址 -->
+      <td>${c.product || ""}</td>         <!-- 产品信息 -->
+      <td>${c.region || ""}</td>          <!-- 地区 -->
+      <td>${c.address || ""}</td>         <!-- 地址 -->
       <td>${c.updated}</td>               <!-- 最新跟进日期 -->
       <td style="background-color:${color};">  <!-- 操作列背景显示状态颜色 -->
         <button onclick="openRecordModal(${idx})">联系记录</button> <!-- 联系记录按钮 -->
@@ -139,12 +230,26 @@ window.addEventListener("resize", syncColumnWidthsFull);
 
 // ================= 客户弹窗 =================
 function openCustomerModal() {
-  editingIndex = null; // 新增客户时索引为空
-  document.getElementById("modalTitle").innerText = "新增客户"; // 弹窗标题
-  document.getElementById("customerModal").style.display = "block"; // 显示弹窗
-  fillStatusSelect(); // 填充状态下拉
-  clearForm(); // 清空表单
-  removeDeleteButton(); // 新增客户时删除“删除客户”按钮（如果存在）
+  editingIndex = null;
+  document.getElementById("modalTitle").innerText = "新增客户";
+  document.getElementById("customerModal").style.display = "block";
+
+  fillStatusSelect();
+  removeDeleteButton();
+  clearForm();
+
+  // ⭐ 初始化一行公司
+  const companyBox = document.getElementById("companyContainer");
+  companyBox.innerHTML = "";
+  addCompanyInput();
+
+  // ⭐ 初始化一行联系人
+  const contactBox = document.getElementById("contactContainer");
+  contactBox.innerHTML = "";
+  addContactRow();
+
+  refreshCompanyButtons();
+  refreshContactButtons();
 }
 
 function closeCustomerModal() { 
@@ -153,33 +258,48 @@ function closeCustomerModal() {
 
 // 编辑客户弹窗
 function editCustomer(idx) {
-  editingIndex = idx; // 当前编辑客户索引
-  const c = customers[idx]; // 当前客户对象
+  editingIndex = idx;
+  const c = customers[idx];
 
-  document.getElementById("modalTitle").innerText = "编辑客户"; // 弹窗标题
-  document.getElementById("customerModal").style.display = "block"; // 显示弹窗
+  document.getElementById("modalTitle").innerText = "编辑客户";
+  document.getElementById("customerModal").style.display = "block";
 
-  // 填充表单
-  document.getElementById("c_company").value = c.company;
-  document.getElementById("c_contact").value = c.contact;
-  document.getElementById("c_phone").value = c.phone;
+  // ===== 公司 =====
+  const companyBox = document.getElementById("companyContainer");
+  companyBox.innerHTML = "";
+  (c.company || []).forEach(name => {
+    addCompanyInput(name);
+  });
+
+  // ===== 联系人 =====
+  const contactBox = document.getElementById("contactContainer");
+  contactBox.innerHTML = "";
+  (c.contacts || []).forEach(p => {
+    addContactRow(p.name, p.phone);
+  });
+
+  // ⭐ 刷新按钮（必须在最后）
+  refreshCompanyButtons();
+  refreshContactButtons();
+
+  // ===== 其它字段 =====
   document.getElementById("c_source").value = c.source || "";
-  document.getElementById("c_product").value = c.product;
-  document.getElementById("c_region").value = c.region;
-  document.getElementById("c_address").value = c.address;
-  fillStatusSelect(); // 填充状态下拉
+  document.getElementById("c_product").value = c.product || "";
+  document.getElementById("c_region").value = c.region || "";
+  document.getElementById("c_address").value = c.address || "";
+
+  fillStatusSelect();
   document.getElementById("c_status").value = c.status;
 
-  addDeleteButton(idx); // 增加“删除客户”按钮
+  addDeleteButton(idx);
 }
 
 // 保存客户
 function saveCustomer() {
   const now = new Date().toISOString().split("T")[0]; // 当前日期
   const data = {
-    company: document.getElementById("c_company").value,
-    contact: document.getElementById("c_contact").value,
-    phone: document.getElementById("c_phone").value,
+    company: getCompanyList(),   // 多公司名
+    contacts: getContactList(),  // 多联系人
     source: document.getElementById("c_source").value,
     product: document.getElementById("c_product").value,
     region: document.getElementById("c_region").value,
@@ -189,12 +309,18 @@ function saveCustomer() {
     records: editingIndex !== null ? customers[editingIndex].records : []
   };
 
-  if (editingIndex === null) customers.push(data); // 新增客户
-  else Object.assign(customers[editingIndex], data); // 编辑客户
+  if (getContactList().length === 0) {
+    alert("至少保留一个联系人");
+    return;
+  }
+
+  if (editingIndex === null) customers.push(data);
+  else Object.assign(customers[editingIndex], data);
 
   closeCustomerModal(); // 关闭弹窗
   renderTable(); // 刷新表格
   saveAllData(); // 保存数据
+  
 }
 
 // 填充状态下拉
@@ -204,8 +330,176 @@ function fillStatusSelect() {
 
 // 清空表单
 function clearForm() { 
-  ["c_company","c_contact","c_phone","c_source","c_product","c_region","c_address"].forEach(id => document.getElementById(id).value=""); 
-  removeDeleteButton(); // 清空表单时删除删除按钮
+  ["c_source","c_product","c_region","c_address"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+}
+
+// 公司名
+// ================= 公司名 =================
+function addCompanyInput(value = "") {
+  const row = document.createElement("div");
+  row.className = "company-row";
+
+  // 输入框
+  const input = document.createElement("input");
+  input.className = "company-input";
+  input.value = value;
+
+  // 按钮容器
+  const btnGroup = document.createElement("div");
+  btnGroup.className = "btn-group";
+
+  const addBtn = document.createElement("button");
+  addBtn.className = "row-btn add";
+  addBtn.innerText = "＋";
+  addBtn.onclick = () => {
+    addCompanyInput();
+    refreshCompanyButtons();
+  };
+
+  const delBtn = document.createElement("button");
+  delBtn.className = "row-btn del";
+  delBtn.innerText = "－";
+  delBtn.onclick = function () {
+    deleteCompanyRow(this);
+  };
+
+  btnGroup.appendChild(addBtn);
+  btnGroup.appendChild(delBtn);
+
+  row.appendChild(input);
+  row.appendChild(btnGroup);
+
+  document.getElementById("companyContainer").appendChild(row);
+
+  // 每次新增/删除后刷新按钮显示逻辑
+  refreshCompanyButtons();
+}
+
+// 删除/添加
+function deleteCompanyRow(btn) {
+  const container = document.getElementById("companyContainer");
+
+  if (container.children.length <= 1) {
+    alert("至少保留一个公司名称");
+    return;
+  }
+
+  if (!confirm("确定要删除这个公司名称吗？")) {
+    return;
+  }
+
+  // ✅ 删整行（关键）
+  const row = btn.closest(".company-row");
+  row.remove();
+
+  refreshCompanyButtons();
+}
+
+// 联系人
+function addContactRow(name = "", phone = "") {
+  const row = document.createElement("div");
+  row.className = "contact-row";
+
+  row.innerHTML = `
+    <div class="contact-inputs">
+      <input class="contact-name" value="${name}">
+      <input class="contact-phone" value="${phone}">
+    </div>
+    <div class="btn-group">
+      <button class="row-btn add">+</button>
+      <button class="row-btn del">-</button>
+    </div>
+  `;
+
+  row.querySelector(".add").onclick = () => {
+    addContactRow();
+    refreshContactButtons(); // ⭐必须加
+  };
+
+  row.querySelector(".del").onclick = function () {
+    deleteContactRow(this);
+  };
+  row.querySelector(".del").onclick = () => deleteContactRow(row);
+
+  document.getElementById("contactContainer").appendChild(row);
+  refreshContactButtons(); // ⭐必须有
+}
+
+// 删除/添加
+function deleteContactRow(btn) {
+  const container = document.getElementById("contactContainer");
+
+  if (container.children.length <= 1) {
+    alert("至少保留一个联系人");
+    return;
+  }
+
+  if (!confirm("确定要删除这个联系人吗？")) {
+    return;
+  }
+
+  // ✅ 删整行
+  const row = btn.closest(".contact-row");
+  row.remove();
+
+  refreshContactButtons();
+}
+// 获取公司名列表
+function getCompanyList() {
+  const inputs = document.querySelectorAll(".company-input");
+  return Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+}
+
+// 获取联系人列表
+function getContactList() {
+  const rows = document.querySelectorAll(".contact-row");
+  return Array.from(rows).map(row => {
+    return {
+      name: row.querySelector(".contact-name").value.trim(),
+      phone: row.querySelector(".contact-phone").value.trim()
+    };
+  }).filter(c => c.name);
+}
+
+//公司按钮
+function refreshCompanyButtons() {
+  const rows = document.querySelectorAll("#companyContainer .company-row");
+
+  rows.forEach((row, index) => {
+    const addBtn = row.querySelector(".add");
+    const delBtn = row.querySelector(".del");
+
+    if (!addBtn || !delBtn) return;
+
+    // ⭐ 只有最后一行显示加号
+    addBtn.style.display = index === rows.length - 1 ? "inline-block" : "none";
+
+    // ⭐ 只有多于1行时显示减号
+    delBtn.style.display = rows.length === 1 ? "none" : "inline-block";
+  });
+}
+
+//联系人按钮
+function refreshContactButtons() {
+  const rows = document.querySelectorAll("#contactContainer .contact-row");
+
+  rows.forEach((row, index) => {
+    const addBtn = row.querySelector(".add");
+    const delBtn = row.querySelector(".del");
+
+    if (!addBtn || !delBtn) return;
+
+    // ⭐ 只有最后一行显示 +
+    addBtn.style.display =
+      index === rows.length - 1 ? "inline-block" : "none";
+
+    // ⭐ 只有一行时不能删
+    delBtn.style.display =
+      rows.length === 1 ? "none" : "inline-block";
+  });
 }
 
 // ================ 增加 / 删除 删除客户按钮函数 ================
@@ -218,7 +512,7 @@ function addDeleteButton(idx) {
   btn.innerText = "删除客户"; // 按钮文字
   btn.style.marginLeft = "8px"; // 与保存按钮保持间距
   btn.onclick = () => { // 点击事件
-    if (confirm(`确定要删除客户 "${customers[idx].company}" 吗？`)) { // 弹出确认
+    if (confirm(`确定要删除客户 "${(customers[idx].company || []).join('/')}" 吗？`)) { // 弹出确认
       customers.splice(idx, 1); // 删除客户
       closeCustomerModal(); // 关闭弹窗
       renderTable(); // 刷新表格
@@ -238,8 +532,8 @@ function removeDeleteButton() {
 function openRecordModal(idx) {// 打开联系记录窗口
   currentIndex = idx;
   document.getElementById("recordModal").style.display = "block";
-  document.getElementById("recordCustomerName").innerText = customers[idx].company; // 显示公司名称
-  renderRecords();
+document.getElementById("recordCustomerName").innerText = 
+  (customers[idx].company || []).join(" / ");  renderRecords();
 
 }
 
@@ -265,7 +559,7 @@ function renderRecords() {
 
 }
 
-// 新增联系记录
+// ================= 新增联系记录 =================
 function addRecord() {
   const now = new Date().toISOString().split("T")[0];
   const content = document.getElementById("newRecordContent").value.trim();
@@ -276,39 +570,33 @@ function addRecord() {
 
   const status = document.getElementById("recordStatusSelect").value;
 
-  // ⭐ 先添加联系记录
   customers[currentIndex].records.push({
     date: now,
     content: content,
     status: status
   });
 
-  // ⭐ 解析联系记录生成待办，同时保留之前勾选状态
   rebuildTodos();
 
-  // ⭐ 同步当天提醒待办，如果是“客户跟进提醒”，标记已完成
+  const mainCompany = (customers[currentIndex].company || [])[0] || "";
+
   todoList.forEach(t => {
-    if (t.company === customers[currentIndex].company && t.date === now && t.content === "客户跟进提醒") {
-      t.done = true; // 已完成
+    if (t.company === mainCompany && t.date === now && t.content === "客户跟进提醒") {
+      t.done = true;
     }
   });
 
-  // ⭐ 刷新今日待办和角标
   renderTodayTodos();
   updateTodoBadge();
 
-  // 更新客户状态和最新跟进时间
   customers[currentIndex].status = status;
   customers[currentIndex].updated = now;
 
-  // 清空输入框
   document.getElementById("newRecordContent").value = "";
 
-  // 刷新联系记录和表格
   renderRecords();
   renderTable();
 
-  // 保存数据
   saveAllData();
 }
 
@@ -317,6 +605,8 @@ function parseTodo(content,index){
   const dateRegex=/\d{4}-\d{1,2}-\d{1,2}|\d{1,2}-\d{1,2}/g;
   const match=content.match(dateRegex);
   if(!match) return;
+
+  const mainCompany = (customers[index].company || [])[0] || "";
 
   match.forEach(d=>{
     let fullDate=d;
@@ -327,22 +617,20 @@ function parseTodo(content,index){
       fullDate = year + "-" + parts[0].padStart(2,"0") + "-" + parts[1].padStart(2,"0");
     }
 
-    // 防重复
     const exist = todoList.find(t =>
-      t.company === customers[index].company &&
+      t.company === mainCompany &&
       t.content === content &&
       t.date === fullDate
     );
 
     if(!exist){
       todoList.push({
-        company: customers[index].company,
+        company: mainCompany,
         content: content,
         date: fullDate,
-        done: false // 默认未完成
+        done: false
       });
     }
-
   });
 }
 
@@ -377,19 +665,38 @@ function rebuildTodos() {
 
 // ================= 检查客户跟进提醒 =================
 function checkReminderTodos(){
-  const today=new Date().toISOString().split("T")[0];
+  const today = new Date();
+
   customers.forEach(c=>{
-    if(c.remindDate===today){
-      todoList.push({
-        company:c.company,
-        content:"客户跟进提醒",
-        date:today
-      });
+    const rule = reminderRules[c.status];
+    if(!rule) return;
 
+    const last = new Date(c.updated);
+    if(isNaN(last)) return;
+
+    const diffDays = (today - last) / (1000*60*60*24);
+
+    if(diffDays >= rule){
+
+      const dateStr = today.toISOString().split("T")[0];
+      const mainCompany = (c.company || [])[0] || "";
+
+      const exist = todoList.find(t =>
+        t.company === mainCompany &&
+        t.content === "客户跟进提醒" &&
+        t.date === dateStr
+      );
+
+      if(!exist){
+        todoList.push({
+          company: mainCompany,
+          content:"客户跟进提醒",
+          date: dateStr,
+          done:false
+        });
+      }
     }
-
   });
-
 }
 
 // ================= 待办窗口 =================
@@ -459,8 +766,9 @@ function updateTodoBadge() {
 // 待办跳转客户
 function jumpToCustomer(companyName) {
   // 找到对应客户在 customers 数组里的索引
-  const idx = customers.findIndex(c => c.company === companyName);
-  if (idx === -1) return; // 没找到
+  const idx = customers.findIndex(c => 
+    (c.company || []).includes(companyName)
+  );  if (idx === -1) return; // 没找到
 
   const tbody = document.getElementById("customerBody");
   if (!tbody) return;
@@ -650,22 +958,33 @@ async function importExcel(input) {
       });
 
       // ===== 遍历每行数据生成客户对象 =====
-      jsonData.forEach(row => {
-        const customer = {};
-        for (const key in row) {
-          if (columnMap[key]) {
-            customer[columnMap[key]] = String(row[key] || "");
-          }
-        }
+  jsonData.forEach(row => {
+    const customer = {};
 
-        // 补全默认字段
-        customer.updated = customer.updated || new Date().toISOString().split("T")[0];
-        customer.status = customer.status || (statusList[0]?.name || "未跟进");
-        customer.records = []; // 默认没有联系记录
+    for (const key in row) {
+      if (columnMap[key]) {
+        customer[columnMap[key]] = String(row[key] || "");
+      }
+    }
 
-        // 加入客户列表
-        customers.push(customer);
-      });
+    // ✅ 转换为新结构
+    customer.company = customer.company ? [customer.company] : [];
+
+    customer.contacts = [{
+      name: customer.contact || "",
+      phone: customer.phone || ""
+    }];
+
+    delete customer.contact;
+    delete customer.phone;
+
+    // 默认字段
+    customer.updated = customer.updated || new Date().toISOString().split("T")[0];
+    customer.status = customer.status || (statusList[0]?.name || "未跟进");
+    customer.records = [];
+
+    customers.push(customer);
+  });
       rebuildTodos(); // 导入后解析联系记录生成待办
       
       renderTable(); // 刷新表格
@@ -683,12 +1002,12 @@ async function importExcel(input) {
   reader.readAsArrayBuffer(file); // 读取文件
 }
 
-// ================= 导出 Excel（增强版，模糊匹配表头） =================
+// ================= 导出 Excel =================
 function exportExcel() {
   const ws = XLSX.utils.json_to_sheet(customers.map(c => ({
-    "公司名称": c.company,
-    "联系人": c.contact,
-    "联系方式": c.phone,
+    "公司名称": (c.company || []).join(" / "),
+    "联系人": (c.contacts || []).map(p => p.name).join(" / "),
+    "联系方式": (c.contacts || []).map(p => p.phone).join(" / "),
     "来源": c.source,
     "产品信息": c.product,
     "地区": c.region,
@@ -699,5 +1018,5 @@ function exportExcel() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "客户信息");
 
-  XLSX.writeFile(wb, "客户信息.xlsx"); // ⚠️ 一定要带 .xlsx 后缀
+  XLSX.writeFile(wb, "客户信息.xlsx");
 }

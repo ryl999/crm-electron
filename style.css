@@ -1,152 +1,426 @@
-/* ===== 页面基础布局 ===== */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    display: flex;
-    flex-direction: column;
-    font-size: 12px;
-    line-height: 1.2;
-    overflow: hidden;
+/* ===== 全局表单元素字体统一 ===== */
+input,                     /* 所有输入框 */
+select,                    /* 所有下拉框 */
+button {                   /* 所有按钮 */
+    font-size: 12px;       /* 统一字体大小 */
 }
+
+
+/* ===== 页面基础布局（整体结构） ===== */
+html, body {
+    height: 100%;              /* 页面高度占满窗口 */
+    margin: 0;                 /* 去掉默认外边距 */
+    padding: 0;                /* 去掉默认内边距 */
+    font-family: Arial, Helvetica, sans-serif; /* 全局字体 */
+    display: flex;             /* 使用 flex 布局 */
+    flex-direction: column;    /* 垂直排列 */
+    font-size: 12px;           /* 全局字体大小 */
+    line-height: 1.2;          /* 行高 */
+    overflow: hidden;          /* 禁止整体滚动 */
+    min-width: 900px;          /* 页面最小宽度 */
+}
+
 
 /* ===== 顶部工具栏 ===== */
 .top-bar {
-    flex: 0 0 auto;
-    padding: 6px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    gap: 8px;
+    flex: 0 0 auto;            /* 固定高度 */
+    padding: 6px 12px;         /* 内边距 */
+    display: flex;             /* 横向排列 */
+    justify-content: space-between; /* 两端对齐 */
+    align-items: center;       /* 垂直居中 */
+    background: #fff;          /* 背景色 */
+    border-bottom: 1px solid #ddd; /* 下边框 */
+    gap: 8px;                  /* 子元素间距 */
 }
-.left-buttons button { margin-right: 6px; }
-.search-box input { width: 220px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 6px; }
+
+/* 左侧按钮间距 */
+.left-buttons button {
+    margin-right: 6px;         /* 按钮右间距 */
+}
+
+/* 搜索框 */
+.search-box input {
+    width: 220px;              /* 宽度 */
+    padding: 4px 8px;          /* 内边距 */
+    border: 1px solid #ccc;    /* 边框 */
+    border-radius: 6px;        /* 圆角 */
+}
+
 
 /* ===== 状态栏 ===== */
 .status-bar {
-    flex: 0 0 auto;
-    padding: 6px 12px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    overflow-x: auto;
-    white-space: nowrap;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
+    flex: 0 0 auto;            /* 固定高度 */
+    padding: 6px 12px;         /* 内边距 */
+    display: flex;             /* 横向排列 */
+    gap: 8px;                  /* 间距 */
+    align-items: center;       /* 垂直居中 */
+    overflow-x: auto;          /* 横向滚动 */
+    white-space: nowrap;       /* 不换行 */
+    background: #fff;          /* 背景 */
+    border-bottom: 1px solid #ddd; /* 分割线 */
 }
+
+/* 状态标签 */
 .status-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    background: #f3f3f3;
-    border-radius: 20px;
-    flex-shrink: 0;
-    font-size: 12px;
+    display: inline-flex;      /* 行内flex */
+    align-items: center;       /* 垂直居中 */
+    gap: 4px;                  /* 内部间距 */
+    padding: 3px 8px;          /* 内边距 */
+    background: #f3f3f3;       /* 背景色 */
+    border-radius: 20px;       /* 圆角 */
+    flex-shrink: 0;            /* 不压缩 */
+    font-size: 12px;           /* 字体 */
 }
-.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* 状态圆点 */
+.status-dot {
+    width: 10px;               /* 宽 */
+    height: 10px;              /* 高 */
+    border-radius: 50%;        /* 圆形 */
+}
+
 
 /* ===== 表格容器 ===== */
 .table-container {
-    flex: 1;
-    overflow-x: auto; /* 横向滚动解决超出问题 */
-    overflow-y: auto; /* 纵向滚动 */
-    margin: 0;        /* 消除与上方缝隙 */
-    padding: 0;       /* 左右贴紧窗口 */
-    box-sizing: border-box;
+    flex: 1;                   /* 占剩余空间 */
+    overflow-x: hidden;        /* 横向滚动控制 */
+    overflow-y: auto;          /* 纵向滚动 */
+    margin: 0;                 /* 外边距 */
+    padding: 0;                /* 内边距 */
+    box-sizing: border-box;    /* 盒模型 */
 }
+
 
 /* ===== 客户表格 ===== */
 .customer-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: auto;
-    font-size: 12px;
-    margin: 0;  /* 表格左右贴紧容器 */
+    width: 100%;               /* 占满宽度 */
+    border-collapse: collapse; /* 边框合并 */
+    table-layout: auto;        /* 自动列宽 */
+    font-size: 12px;           /* 字体 */
+    margin: 0;                 /* 外边距 */
 }
 
-/* ===== 表头固定，与上方工具栏/状态栏紧贴 ===== */
+/* 表头固定 */
 .customer-table thead {
-    position: sticky;  /* 固定表头 */
-    top: 0;            /* 紧贴表格容器顶部 */
-    z-index: 3;        /* 高于表体内容 */
-    background: #fff;  /* 表头背景色 */
-    margin: 0;         /* 消除默认间隙 */
-    padding: 0;        /* 消除默认内边距 */
+    position: sticky;          /* 固定 */
+    top: 0;                    /* 顶部 */
+    z-index: 3;                /* 层级 */
+    background: #fff;          /* 背景 */
 }
 
-/* 表头和表体单元格 */
+/* 单元格 */
 .customer-table th,
 .customer-table td {
-    border: 1px solid #ddd;
-    padding: 4px 6px;
-    min-width: 50px;  /* 最小宽度，允许拖动列 */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    border: 1px solid #ddd;    /* 边框 */
+    padding: 4px 6px;          /* 内边距 */
+    min-width: 50px;           /* 最小宽度 */
+    white-space: nowrap;       /* 不换行 */
+    overflow: hidden;          /* 隐藏溢出 */
+    text-overflow: ellipsis;   /* 省略号 */
 }
 
-/* 操作列保证最小宽度 */
-.customer-table td:last-child { min-width: 80px; text-align: center; }
+/* 操作列 */
+.customer-table td:last-child {
+    min-width: 80px;           /* 最小宽度 */
+    text-align: center;        /* 居中 */
+}
 
-/* 鼠标悬停高亮 */
-.customer-table tr:hover { background: #f8fbff; }
+/* 表格下拉框 */
+.customer-table td select {
+    width: auto;               /* 自动宽度 */
+    min-width: 100%;           /* 至少填满 */
+    box-sizing: border-box;    /* 盒模型 */
+    border: none;              /* 无边框 */
+    background: transparent;   /* 透明背景 */
+    white-space: nowrap;       /* 不换行 */
+    font-size: 12px;           /* 字体 */
+    font-family: inherit;      /* 继承字体 */
+}
+
+/* 行悬停 */
+.customer-table tr:hover {
+    background: #f8fbff;       /* 高亮 */
+}
+
+
+/* ===== 公司 & 联系人行（统一结构） ===== */
+.company-row,
+.contact-row {
+    display: flex;             /* 横向布局 */
+    width: 100%;               /* 占满 */
+    align-items: stretch;      /* 高度统一 */
+}
+
+
+/* ===== 输入区域（核心布局） ===== */
+.company-row input,
+.contact-inputs {
+    display: flex;             /* flex布局 */
+    flex: 1;                   /* 占满 */
+    min-width: 0;              /* 允许压缩 */
+}
+
+/* 联系人输入框高度 */
+.contact-name,
+.contact-phone {
+    height: 24px;              /* 统一高度 */
+    box-sizing: border-box;    /* 盒模型 */
+}
+
+/* 联系人 input 压缩关键 */
+.contact-row input {
+    min-width: 0;              /* 允许压缩 */
+}
+
+
+/* ===== 包裹容器 ===== */
+.company-wrapper,
+.contact-wrapper {
+    display: flex;             /* flex */
+    flex-direction: column;    /* 垂直堆叠 */
+    gap: 4px;                  /* 间距 */
+}
+
+/* 公司输入 */
+#companyContainer input {
+    width: 100%;      /* ⭐必须改 */
+    min-width: 0;     /* ⭐必须有 */
+}
+
+#companyContainer {
+    width: 100%;
+    min-width: 0;
+}
+
+
+/* ===== 联系人容器 ===== */
+#contactContainer {
+    display: flex;             /* flex */
+    flex-direction: column;    /* 一行一行 */
+    gap: 4px;                  /* 间距 */
+}
+
+/* 姓名比例 */
+#contactContainer .contact-name {
+    flex: 3;                   /* 3份 */
+    min-width: 0;              /* 可压缩 */
+}
+
+/* 电话比例 */
+#contactContainer .contact-phone {
+    flex: 7;                   /* 7份 */
+    min-width: 0;              /* 可压缩 */
+}
+
+
+/* ===== 字体统一 ===== */
+.company-wrapper input,
+.contact-wrapper input,
+.company-wrapper select,
+.contact-wrapper select {
+    font-size: 12px;           /* 字体统一 */
+}
+
+/* 公司占满 */
+.company-wrapper {
+    width: 100%;
+    min-width: 0;           /* ⭐关键 */
+}
+
+.company-wrapper input {
+    width: 100%;            /* 占满容器 */
+    min-width: 0;           /* ⭐关键 */
+    box-sizing: border-box; /* 防止 padding 撑大 */
+}
+
+
+/* ===== 公司输入行 ===== */
+.company-row {
+    display: flex;          /* 横向布局 */
+    width: 100%;            /* 占满父级 */
+    max-width: 100%;        /* ⭐关键：禁止超出 td */
+    overflow: hidden;       /* ⭐关键：裁掉多余内容 */
+}
+/* 公司输入框 */
+.company-input {
+    flex: 1 1 auto;         /* 自适应 */
+    min-width: 0;           /* ⭐允许缩小 */
+    max-width: 100%;        /* ⭐关键：不能超过父级 */
+    overflow: hidden;       /* ⭐防止撑开 */
+    text-overflow: ellipsis;/* ⭐可选：省略号 */
+    white-space: nowrap;    /* ⭐不换行 */
+}
+
+
+/* ===== 联系人输入（3:7） ===== */
+.contact-inputs {
+    flex: 1;                   /* 占满 */
+    min-width: 0;              /* 可缩小 */
+    display: flex;             /* flex */
+}
+
+.contact-name {
+    flex: 3;                   /* 3份 */
+    min-width: 0;              /* 可缩 */
+}
+
+.contact-phone {
+    flex: 7;                   /* 7份 */
+    min-width: 0;              /* 可缩 */
+}
+
 
 /* ===== 按钮 ===== */
-button { font-size: 12px; padding: 2px 6px; cursor: pointer; }
+button {
+    font-size: 12px;           /* 字体 */
+    padding: 2px 6px;          /* 内边距 */
+    cursor: pointer;           /* 手型 */
+}
+
+/* 输入+按钮容器 */
+.input-with-btn {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 4px;
+    width: 100%;      /* ⭐锁死在 grid 右侧 */
+    position: relative;   /* ⭐建立层级 */
+    z-index: 1;           /* ⭐低于label */
+}
+
+/* 按钮组 */
+.btn-group {
+    display: flex;             /* flex */
+    gap: 4px;                  /* 间距 */
+    flex-shrink: 0;            /* 不压缩 */
+}
+
+/* 行按钮 */
+.row-btn {
+    width: 24px;               /* 宽 */
+    height: 24px;              /* 高 */
+    padding: 0;                /* 内边距 */
+    flex-shrink: 0;            /* 不压缩 */
+}
+
+/* 加号 */
+.row-btn.add {
+    background: #409eff;       /* 蓝色 */
+}
+
+/* 减号 */
+.row-btn.del {
+    background: #f56c6c;       /* 红色 */
+}
+
 
 /* ===== 弹窗 ===== */
 .modal {
-    display: none;
-    position: fixed;
-    left: 50%;
+    display: none;             /* 默认隐藏 */
+    position: fixed;           /* 固定 */
+    left: 50%;                 /* 居中 */
     top: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    padding: 12px 16px;
-    width: 400px;
-    border-radius: 6px;
-    box-shadow: 0 0 6px rgba(0,0,0,0.1);
-    z-index: 1000;
-}
-.modal-content { width: 100%; }
-.close {
-    float: right;
-    cursor: pointer;
-    padding: 2px 6px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+    transform: translate(-50%, -50%); /* 居中 */
+    background: #fff;          /* 背景 */
+    padding: 12px 16px;        /* 内边距 */
+    width: 400px;              /* 宽度 */
+    border-radius: 6px;        /* 圆角 */
+    box-shadow: 0 0 6px rgba(0,0,0,0.1); /* 阴影 */
+    z-index: 1000;             /* 层级 */
 }
 
-/* ===== 表单 ===== */
-.form-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 6px;
+/* 弹窗内容 */
+.modal-content {
+    width: 100%;               /* 占满 */
 }
-.form-row label { width: 70px; color: #333; }
+
+/* 关闭按钮 */
+.close {
+    float: right;              /* 右上 */
+    cursor: pointer;           /* 手型 */
+    padding: 2px 6px;          /* 内边距 */
+    background: #f0f0f0;       /* 背景 */
+    border-radius: 4px;        /* 圆角 */
+    border: 1px solid #ccc;    /* 边框 */
+}
+
+
+/* ===== 表单行 ===== */
+.form-row {
+    display: grid;
+    grid-template-columns: 70px 1fr; /* 左固定右自适应 */
+    align-items: center;
+}
+
+.form-row label {
+    background: red;
+}
+
+/* label */
+.form-row label {
+    width: 70px;
+    flex-shrink: 0;
+    position: relative;   /* ⭐关键 */
+    z-index: 2;           /* ⭐压住输入框 */
+    background: #fff;     /* ⭐防止被透过去 */
+}
+
+/* 输入 */
 .form-row input,
-.form-row select { flex: 1; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; }
+.form-row select {
+    flex: 1;                   /* 占满 */
+    padding: 4px 6px;          /* 内边距 */
+    border: 1px solid #ccc;    /* 边框 */
+    border-radius: 4px;        /* 圆角 */
+    box-sizing: border-box;    /* 盒模型 */
+    font-size: 12px;           /* 字体 */
+}
+
 
 /* ===== 状态编辑 ===== */
 .status-edit-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
+    display: flex;             /* flex */
+    align-items: center;       /* 居中 */
+    margin-bottom: 6px;        /* 间距 */
 }
-.status-edit-row input { padding: 2px 4px; }
-.status-edit-row button { padding: 2px 6px; }
 
-/* ===== 跟进提醒设置 ===== */
-.reminder-row { display: flex; align-items: center; margin-bottom: 6px; }
-.reminder-label { width: 100px; }
-.reminder-row input { width: 60px; margin-right: 4px; }
+.status-edit-row input {
+    padding: 2px 4px;          /* 内边距 */
+}
 
-/* ===== 响应式优化 ===== */
-@media (max-width: 1100px) { .search-box input { width: 180px; } }
-@media (max-height: 700px) { .modal-content { max-height: 90%; } }
+.status-edit-row button {
+    padding: 2px 6px;          /* 内边距 */
+}
+
+
+/* ===== 跟进提醒 ===== */
+.reminder-row {
+    display: flex;             /* flex */
+    align-items: center;       /* 居中 */
+    margin-bottom: 6px;        /* 间距 */
+}
+
+/* 标签 */
+.reminder-label {
+    width: 100px;              /* 宽度 */
+}
+
+/* 输入 */
+.reminder-row input {
+    width: 60px;               /* 宽度 */
+    margin-right: 4px;         /* 间距 */
+}
+
+
+/* ===== 响应式 ===== */
+@media (max-width: 900px) {
+    .search-box input {
+        width: 180px;          /* 缩小 */
+    }
+}
+
+@media (max-height: 700px) {
+    .modal-content {
+        max-height: 90%;       /* 限制高度 */
+    }
+}
