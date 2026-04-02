@@ -151,13 +151,17 @@ html, body {
     align-items: stretch;      /* 高度统一 */
 }
 
+/* 公司输入框 */
+.company-row input {
+    flex: 1;
+    min-width: 0;
+}
 
-/* ===== 输入区域（核心布局） ===== */
-.company-row input,
+/* 联系人输入区域 */
 .contact-inputs {
-    display: flex;             /* flex布局 */
-    flex: 1;                   /* 占满 */
-    min-width: 0;              /* 允许压缩 */
+    display: flex;
+    flex: 1;
+    min-width: 0;
 }
 
 /* 联系人输入框高度 */
@@ -165,6 +169,7 @@ html, body {
 .contact-phone {
     height: 24px;              /* 统一高度 */
     box-sizing: border-box;    /* 盒模型 */
+    min-width: 0;   /* ⭐必须 */
 }
 
 /* 联系人 input 压缩关键 */
@@ -293,6 +298,7 @@ button {
     display: flex;             /* flex */
     gap: 4px;                  /* 间距 */
     flex-shrink: 0;            /* 不压缩 */
+    margin-left: auto;   /* ⭐关键：推到最右边 */
 }
 
 /* 行按钮 */
@@ -348,21 +354,15 @@ button {
 /* ===== 表单行 ===== */
 .form-row {
     display: grid;
-    grid-template-columns: 70px 1fr; /* 左固定右自适应 */
+    grid-template-columns: 70px minmax(0, 1fr); /* 左固定右自适应 */
     align-items: center;
-}
-
-.form-row label {
-    background: red;
 }
 
 /* label */
 .form-row label {
     width: 70px;
     flex-shrink: 0;
-    position: relative;   /* ⭐关键 */
-    z-index: 2;           /* ⭐压住输入框 */
-    background: #fff;     /* ⭐防止被透过去 */
+    background: #fff;
 }
 
 /* 输入 */
