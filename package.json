@@ -18,12 +18,16 @@
   "build": {
     "appId": "com.ryl999.crm",
     "productName": "CRM客户管理",
+
     "files": [
-      "**/*"
+      "!dist/*",
+      "!*.log"
     ],
+
     "directories": {
       "buildResources": "assets"
     },
+
     "mac": {
       "target": [
         {
@@ -31,21 +35,24 @@
           "arch": ["universal"]
         }
       ],
-      "icon": "assets/icon.icns"
+      "icon": "./assets/icon.icns"
     },
+
     "dmg": {
-      "icon": "assets/icon.icns",
+      "icon": "./assets/icon.icns",
       "contents": [
         { "x": 130, "y": 220, "type": "file" },
         { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
       ]
     },
+
     "win": {
       "target": [
         { "target": "nsis", "arch": ["x64", "ia32"] }
       ],
-      "icon": "assets/icon.ico"
+      "icon": "./assets/icon.ico"
     },
+
     "nsis": {
       "oneClick": false,
       "perMachine": false,
