@@ -25,7 +25,12 @@
       "buildResources": "assets"
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["universal"]
+        }
+      ],
       "icon": "assets/icon.icns"
     },
     "dmg": {
