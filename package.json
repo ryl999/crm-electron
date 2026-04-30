@@ -4,22 +4,29 @@
   "description": "CRM 客户管理系统",
   "author": "任云龙 <renyunlong@example.com>",
   "main": "main.js",
+
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "dist": "electron-builder --mac --win"
   },
+
   "devDependencies": {
     "electron": "^25.9.8",
     "electron-builder": "^24.13.3"
   },
+
   "dependencies": {
     "xlsx": "^0.18.5"
   },
+
   "build": {
     "appId": "com.ryl999.crm",
     "productName": "CRM客户管理",
 
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+
     "files": [
+      "**/*",
       "!dist/*",
       "!*.log"
     ],
@@ -32,7 +39,7 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["universal"]
+          "arch": ["x64", "arm64"]
         }
       ],
       "icon": "./assets/icon.icns"
@@ -48,7 +55,10 @@
 
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64", "ia32"] }
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        }
       ],
       "icon": "./assets/icon.ico"
     },
