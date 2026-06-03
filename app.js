@@ -546,17 +546,21 @@ function closeRecordModal() {
 // 渲染历史联系记录
 function renderRecords() {
   const c = customers[currentIndex];
-  document.getElementById("recordList").innerHTML =  // 联系记录列表
+
+  document.getElementById("recordList").innerHTML =
     c.records
       .map(r => `<div>${r.date} - ${r.content} - ${r.status}</div>`)
       .join("");
 
-  // 跟进状态选择
   document.getElementById("recordStatusSelect").innerHTML =
     statusList
-      .map(s => `<option value="${s.name}">${s.name}</option>`)
+      .map(s => `
+        <option value="${s.name}"
+          ${s.name === c.status ? "selected" : ""}>
+          ${s.name}
+        </option>
+      `)
       .join("");
-
 }
 
 // ================= 新增联系记录 =================
@@ -593,6 +597,7 @@ function addRecord() {
   customers[currentIndex].updated = now;
 
   document.getElementById("newRecordContent").value = "";
+  document.getElementById("recordStatusSelect").value = status;
 
   renderRecords();
   renderTable();
